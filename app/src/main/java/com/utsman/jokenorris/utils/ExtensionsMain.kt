@@ -15,15 +15,29 @@ typealias layoutRes = R.layout
 typealias idRes = R.id
 typealias styleRes = R.style
 
-fun logD(msg: String?, tag: String = "JOKE_NORRIS") {
-    debug {
+fun Any.logD(msg: String?, tag: String = "JOKE_NORRIS", enableDebug: Boolean = false) {
+    if (enableDebug) {
+        debug {
+            val maxLogSize = 1000
+            val nullableMsg = msg ?: ""
+            for (i in 0..nullableMsg.length / maxLogSize) {
+                val start = i * maxLogSize
+                var end = (i + 1) * maxLogSize
+                end = if (end > nullableMsg.length) nullableMsg.length else end
+                Log.d(
+                    tag + " -> " + this::class.java.canonicalName,
+                    nullableMsg.substring(start, end)
+                )
+            }
+        }
+    } else {
         val maxLogSize = 1000
         val nullableMsg = msg ?: ""
         for (i in 0..nullableMsg.length / maxLogSize) {
             val start = i * maxLogSize
             var end = (i + 1) * maxLogSize
             end = if (end > nullableMsg.length) nullableMsg.length else end
-            Log.d(tag, nullableMsg.substring(start, end))
+            Log.d(tag + " -> " + this::class.java.canonicalName, nullableMsg.substring(start, end))
         }
     }
 }

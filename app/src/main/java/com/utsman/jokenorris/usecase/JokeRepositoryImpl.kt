@@ -10,16 +10,22 @@ import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class JokeRepositoryImpl @Inject constructor(private val dataSource: JokeDataSource) : JokeRepository {
-    override val categories: MutableStateFlow<ResultState<List<String>>> = idle()
-    override val random: MutableStateFlow<ResultState<Joke>> = idle()
-    override val list: MutableStateFlow<ResultState<List<Joke>>> = idle()
-    override val search: MutableStateFlow<ResultState<List<Joke>>> = idle()
+
+    private val _categories: MutableStateFlow<ResultState<List<String>>> = idle()
+    private val _random: MutableStateFlow<ResultState<Joke>> = idle()
+    private val _list: MutableStateFlow<ResultState<List<Joke>>> = idle()
+    private val _search: MutableStateFlow<ResultState<List<Joke>>> = idle()
+
+    override val categories: StateFlow<ResultState<List<String>>> = _categories
+    override val random: StateFlow<ResultState<Joke>> = _random
+    override val list: StateFlow<ResultState<List<Joke>>> = _list
+    override val search: StateFlow<ResultState<List<Joke>>> = _search
 
     override suspend fun getCategories() {
         fetch {
             dataSource.categories()
         }.collect {
-            categories.value = it
+            _categories.value = it
         }
     }
 
@@ -29,7 +35,7 @@ class JokeRepositoryImpl @Inject constructor(private val dataSource: JokeDataSou
         }.map {
             Mapper.mapResult(it) { Mapper.mapApiToEntity(this) }
         }.collect {
-            random.value = it
+            _random.value = it
         }
     }
 
@@ -43,7 +49,7 @@ class JokeRepositoryImpl @Inject constructor(private val dataSource: JokeDataSou
                 }
             }
         }.collect {
-            list.value = it
+            _list.value = it
         }
     }
 
@@ -57,7 +63,7 @@ class JokeRepositoryImpl @Inject constructor(private val dataSource: JokeDataSou
                 }
             }
         }.collect {
-            search.value = it
+            _search.value = it
         }
     }
 }

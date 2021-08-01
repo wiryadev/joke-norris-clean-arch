@@ -40,7 +40,9 @@ class RandomFragment : Fragment(layoutRes.fragment_random) {
     }
 
     private fun onView() = binding.run {
+        logD("hahahaha")
         viewModel.random.observe(viewLifecycleOwner) { result ->
+            logD("result is --> $result")
             networkUI(result)
             tvJoke.isVisible = result is ResultState.Success
             result.onSuccess { joke ->
@@ -79,7 +81,7 @@ class RandomFragment : Fragment(layoutRes.fragment_random) {
         val isLoading = result is ResultState.Loading
         val isError = result is ResultState.Error
         btnTryAgain.setOnClickListener {
-            viewModel.getList()
+            viewModel.getRandom()
         }
 
         btnCategory.setOnClickListener {

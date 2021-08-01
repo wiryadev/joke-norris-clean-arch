@@ -2,13 +2,13 @@ package com.utsman.jokenorris.usecase
 
 import com.utsman.jokenorris.domain.ResultState
 import com.utsman.jokenorris.domain.entity.Joke
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 interface JokeRepository {
-    val categories: MutableStateFlow<ResultState<List<String>>>
-    val random: MutableStateFlow<ResultState<Joke>>
-    val list: MutableStateFlow<ResultState<List<Joke>>>
-    val search: MutableStateFlow<ResultState<List<Joke>>>
+    val categories: StateFlow<ResultState<List<String>>>
+    val random: StateFlow<ResultState<Joke>>
+    val list: StateFlow<ResultState<List<Joke>>>
+    val search: StateFlow<ResultState<List<Joke>>>
 
     suspend fun getCategories()
     suspend fun getRandom(category: String = "")

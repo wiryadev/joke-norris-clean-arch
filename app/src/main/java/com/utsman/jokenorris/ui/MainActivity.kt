@@ -31,6 +31,8 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.findFragmentById(idRes.nav_host_container) as NavHostFragment
         NavigationUI.setupWithNavController(bottomNavigation, navHostFragment.navController)
 
+        logD("cukkk---------")
+
         viewModel.getList()
         viewModel.getRandom()
         viewModel.getCategories()
