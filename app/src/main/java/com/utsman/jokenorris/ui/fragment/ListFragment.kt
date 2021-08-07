@@ -1,68 +1,98 @@
 package com.utsman.jokenorris.ui.fragment
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import android.viewbinding.library.fragment.viewBinding
-import androidx.core.view.isVisible
+import android.view.ViewGroup
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.utsman.jokenorris.databinding.FragmentListBinding
+import com.google.android.material.composethemeadapter.MdcTheme
+import com.utsman.jokenorris.R
 import com.utsman.jokenorris.domain.ResultState
 import com.utsman.jokenorris.domain.entity.Joke
-import com.utsman.jokenorris.ui.adapter.JokeAdapter
+import com.utsman.jokenorris.ui.components.ItemNetwork
+import com.utsman.jokenorris.ui.components.JokeList
 import com.utsman.jokenorris.ui.viewModel.JokeViewModel
-import com.utsman.jokenorris.utils.layoutRes
 import com.utsman.jokenorris.utils.onFailure
 import com.utsman.jokenorris.utils.onSuccess
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class ListFragment : Fragment(layoutRes.fragment_list) {
+class ListFragment : Fragment() {
 
     private val viewModel: JokeViewModel by activityViewModels()
-    private val jokeAdapter = JokeAdapter()
-    private val binding: FragmentListBinding by viewBinding()
+    private val resultState = mutableStateOf<ResultState<List<Joke>>>(ResultState.Idle())
+    private val jokesList = mutableListOf<Joke>()
+    private val errorMessage = mutableStateOf("")
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        onView()
-    }
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            viewModel.list.observe(viewLifecycleOwner) { result ->
+                resultState.value = result
 
-    private fun onView() = binding.run {
-        rvJoke.apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = jokeAdapter
-        }
+                result.onFailure {
+                    errorMessage.value = it.message.toString()
+                }
 
-        viewModel.list.observe(viewLifecycleOwner) { result ->
-            networkUI(result)
-
-            val isSuccess = result is ResultState.Success
-            rvJoke.isVisible = isSuccess
-            result.onSuccess { jokes ->
-                jokeAdapter.updateList(jokes)
+                result.onSuccess { jokes ->
+                    jokesList.clear()
+                    jokesList.addAll(jokes)
+                }
             }
-        }
 
-        btnShuffle.setOnClickListener {
-            viewModel.getList()
-        }
-    }
+            setContent {
+                MdcTheme(
+                    setDefaultFontFamily = true
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        if (resultState.value is ResultState.Success) {
+                            JokeList(list = jokesList)
+                        }
 
-    private fun FragmentListBinding.networkUI(result: ResultState<List<Joke>>) = layoutNetwork.run {
-        val isLoading = result is ResultState.Loading
-        val isError = result is ResultState.Error
-        btnTryAgain.setOnClickListener {
-            viewModel.getList()
-        }
+                        ItemNetwork(
+                            isLoading = resultState.value is ResultState.Loading,
+                            isError = resultState.value is ResultState.Error,
+                            errorMessage = errorMessage.value,
+                            retryOnClick = { viewModel.getList() },
+                            modifier = Modifier.align(Alignment.Center)
+                        )
 
-        prNetwork.isVisible = isLoading
-        btnTryAgain.isVisible = isError
-        tvError.isVisible = isError
-
-        result.onFailure { th ->
-            tvError.text = th.message
+                        FloatingActionButton(
+                            onClick = { viewModel.getList() },
+                            backgroundColor = Color.White,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(34.dp),
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.ic_shuffle),
+                                contentDescription = stringResource(
+                                    id = R.string.decs_refresh_the_jokes
+                                ),
+                                colorFilter = ColorFilter.tint(Color.Gray)
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
